@@ -67,16 +67,20 @@ int main(void)
     int divisor = 0;
     int module = 0;
 
+    float seconds = 1;
     uint32_t data[5];
-    char vector_de_datos[1024];
+    uint32_t señal_1[1024];
+    uint32_t señal_2[1024];
+
     Configurar_PLL(_40MHZ);  //Configuracion de velocidad de reloj
     //Configurar_GPIO();
     UART_2_CONFIG(); // Puerto D
     ADC_CONFIGURATION_PORT_E(); // Puerto E
     SEQ_CONFIGURATION_0();
     PWM_CONFIGURATION(module, divisor, freq, f_clk, duty_cycle); // PB4 Puerto B
-    TIMER_CONFIGURATION(1, 40000000);
+    TIMER_CONFIGURATION(seconds, (float)f_clk);
     //PWM_CONFIGURATION(int module, int divisor, int freq, int f_clk, int duty_cycle)
+    int ii = 0; 
     while (1){
         // Timer to one second blink
         /*if ((TIMER0 -> RIS & 0x00000001) == 1){
@@ -84,10 +88,16 @@ int main(void)
             ADC_ISR_SEQ_0(data);
             GPIOF -> DATA ^= (1 << 2); //TOGGLE PF2 
         }*/
+        // Obtención de datos cada n segundos
         TICK_TOCK(data);
-        integer_to_char(data[0]);
-        integer_to_char(data[1]);
-        integer_to_char(data[2]);
+        señal_1[ii] = data[0]; 
+        señal_2[ii] = data[1];
+        integer_to_char(señal_1[ii]);
+        integer_to_char(señal_2[ii]);
+        //integer_to_char(data[2]);
+        if (ii == 1024){
+            ii = 0;
+        }
     }   
 }
 
