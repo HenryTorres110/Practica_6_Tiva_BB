@@ -30,7 +30,7 @@
 extern void PWM_CONFIGURATION(int module, int divisor,  int freq, int f_clk, int duty_cycle)
 {
     SYSCTL->RCGCPWM |= (1 << module); // 0 o 1 para cada módulo
-    SYSCTL->RCGCGPIO |= 0x2; // Activamos puerto B, A corresponde a 0, B a 1 hasta F a 5.
+    SYSCTL->RCGCGPIO |= (1 << 1); // Activamos Puerto B
     if (divisor == 0){
         SYSCTL->RCC &= ~0x00100000; // el bit 20 es el de USEPWMDIV
     }
@@ -39,20 +39,46 @@ extern void PWM_CONFIGURATION(int module, int divisor,  int freq, int f_clk, int
         SYSCTL->RCC |= 0x000E0000; // 64 divisor
         f_clk = f_clk / divisor;
     }
-    GPIOB->AFSEL |= (1 << 4) | (1 << 5); // PB4 Y PB5 PINS
-    GPIOB->PCTL &= ~0x00FF0000;//0b11111111000000001111111111111111; Poner en 0 los pines 4 y 5
-    GPIOB->PCTL |= 0x00440000;//0b00000000010001000000000000000000; // Configurar modo de PWM asignando el valor decimal al campo de bit de los pines 4 y 5
-    GPIOB->DEN |= (1 << 4) | (1 << 5); // Digital Enable para los mismos pines del AFSEL
+    // Puerto B
+    GPIOB->AFSEL |= (1 << 4) | (1 << 7); // PB4 Y PB7 PINS
+    GPIOB->PCTL &= ~0xF00F0000;//0b00001111000000001111111111111111; Poner en 0 los pines 4 y 5
+    GPIOB->PCTL |= 0x40040000;//0b00000000010001000000000000000000; // Configurar modo de PWM asignando el valor decimal al campo de bit de los pines 4 y 5
+    GPIOB->DEN |= (1 << 4) | (1 << 7); // Digital Enable para los mismos pines del AFSEL
+    
+    /*GPIOE->AFSEL |= (1 << 4); // PE4 
+    GPIOE->PCTL &= ~0x000F0000; 
+    GPIOE->PCTL |= 0x00040000; // Pag 651
+    GPIOE->DEN |= (1 << 4);*/
 
+    PWM0 -> _0_CTL &= ~(1 << 0);
     PWM0 -> _1_CTL &= ~(1 << 0); // Deshabilita el contador del generador 1
-    PWM0 -> _1_CTL &= ~(1 << 1); // COUNT DOWN MODE
+    //PWM0 -> _2_CTL &= ~(1 << 0);
 
+    PWM0 -> _0_CTL &= ~(1 << 1);
+    PWM0 -> _1_CTL &= ~(1 << 1); // COUNT DOWN MODE
+    //PWM0 -> _2_CTL &= ~(1 << 1);
+
+    PWM0->_0_GENB = 0x0000080C; //0x0000080C;
     PWM0->_1_GENA = 0x0000008C; // Cuando contador = LOAD Drive pwmA High, when comparator A matches counter Drive pwmA Low
-    //PWM0->_1_GENB = 0x0000008C;
-    // con f_clk Mhz de reloj
+    //PWM0->_2_GENA = 0x0000008C;
+    // CARGAS
+    PWM0->_0_LOAD = (f_clk/freq);
     PWM0->_1_LOAD = (f_clk/freq); /*cuentas=fclk/fpwm  para 1khz cuentas = (16,000,000/1600)*/
+    //PWM0->_2_LOAD = (f_clk/freq);
+
+    PWM0->_0_CMPB = (int)((1.0 - (duty_cycle / 100.0)) *(f_clk / freq));
     PWM0->_1_CMPA = (int)((1.0 - (duty_cycle / 100.0)) *(f_clk / freq));//2499; //(int)((duty_cycle / 100) * (int)(f_clk / freq)) - 1;//(1 - (duty_cycle / 100)) * (int)(f_clk / freq);
+    //PWM0->_2_CMPA = (int)((1.0 - (duty_cycle / 100.0)) *(f_clk / freq));
+
+
+    PWM0 -> _0_CTL = 1;
     PWM0 -> _1_CTL = 1;
-    PWM0->ENABLE = 0xC; // Habilitar channel 2 y 3
+    //PWM0 -> _2_CTL = 1;
+
+    //PWM0 -> ENABLE = 0x16; // CHANEL 1, 2 Y 4
+
+    PWM0->ENABLE = 0x6; // CHANNEL 1 Y 2
+
+    //PWM0->ENABLE = 0xC; // Habilitar channel 2 y 3
 }
 
