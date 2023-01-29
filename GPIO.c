@@ -11,6 +11,14 @@ extern void Configurar_GPIO(void)
     GPIOF->PUR = 0x11;          // enable pull-up on PF0 and PF4
     GPIOF->DEN = 0x1F;          // 7) enable digital I/O on PF4-0
 }
+extern void OUTPUT_PINS_CONFIGURATION(void){
+  SYSCTL -> RCGCGPIO |= (1 << 0) | (1 << 2); // Puerto A y Puerto C
+  GPIOA -> DIR = 0xFF;
+  GPIOA -> DEN = 0xFF; 
+
+  GPIOC -> DIR = 0xFF;
+  GPIOC -> DEN = 0xFF;
+}
 
 extern void Delay(void)
 {
