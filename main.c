@@ -2,10 +2,10 @@
 #include "lib/include.h"
 #include <stdlib.h>
 
-char *reading_string(char delimiter, int *ptr){
+char *reading_string(char delimiter){
     char letter;
-    static char array[10];
-    for ( int i; i < 10; i++){
+    static char array[12];
+    for ( int i = 0; i < 12; i++){
         array[i]  = NULL;
     }
     int counter = 0;
@@ -15,7 +15,6 @@ char *reading_string(char delimiter, int *ptr){
         letter = readChar();
         counter ++;
     }
-    *ptr = strlen(array);
     return &array[0];
 }
 
@@ -59,6 +58,16 @@ extern void TICK_TOCK(uint32_t data[5]){
     }
 }
 
+extern void SEND_DATA_OUTSIDE(char signal[12]){
+    int bit_number[12] = {0};
+    int length = strlen(signal); 
+    for (int i = 0; i < length; i++){
+        bit_number[i] = signal[i] - '0';
+    }
+    GPIOA -> DATA = (bit_number[0] << 0) | (bit_number[1] << 1) | (bit_number[2] << 2) | (bit_number[3] << 3) | (bit_number[4] << 4) | (bit_number[5] << 5) | (bit_number[6] << 6) | (bit_number[7] << 7);
+    GPIOC -> DATA = (bit_number[8] << 0) | (bit_number[9] << 1) | (bit_number[10] << 3)| (bit_number[11] << 4);
+}
+
 int main(void)
 {
     int duty_cycle = 76;
@@ -79,8 +88,8 @@ int main(void)
     SEQ_CONFIGURATION_0();
     PWM_CONFIGURATION(module, divisor, freq, f_clk, duty_cycle); // PB4 Puerto B
     TIMER_CONFIGURATION(seconds, (float)f_clk);
-    //PWM_CONFIGURATION(int module, int divisor, int freq, int f_clk, int duty_cycle)
-    int ii = 0; 
+    OUTPUT_PINS_CONFIGURATION();
+    int ii = 0;
     while (1){
         // Timer to one second blink
         /*if ((TIMER0 -> RIS & 0x00000001) == 1){
@@ -90,11 +99,24 @@ int main(void)
         }*/
         // Obtención de datos cada n segundos
         TICK_TOCK(data);
+        // Guardado de los datos en arreglos de 1024 enteros
         señal_1[ii] = data[0]; 
         señal_2[ii] = data[1];
+        // Envío de las señales por muestra a MATLAB
         integer_to_char(señal_1[ii]);
         integer_to_char(señal_2[ii]);
-        //integer_to_char(data[2]);
+        // Leemos datos en binario de Matlab
+        char binary_signal_1[12] = "";
+        char binary_signal_2[12] = ""; 
+        char *matlab_signal_1 = reading_string('\n');
+        strcpy(binary_signal_1, matlab_signal_1);
+        char *matlab_signal_2 = reading_string('\n');
+        strcpy(binary_signal_2, matlab_signal_2);
+
+        SEND_DATA_OUTSIDE(binary_signal_1);
+        // SEND_DATA_OUTSIDE(binary_signal_2)
+
+        ii ++;
         if (ii == 1024){
             ii = 0;
         }

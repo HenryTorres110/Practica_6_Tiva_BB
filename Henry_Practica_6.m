@@ -12,18 +12,19 @@ for ii=1:length(vector_de_datos)
     vector_de_datos{ii} = zeros(1, samples);
 end
 
+ith_entry = 1; 
 % Lectura de los datos
-for ith_entry = 1:samples
+while true
     vector_de_datos{1}(ith_entry) = str2double(readline(s));
     vector_de_datos{2}(ith_entry) = str2double(readline(s));
-end
+    % Transformación de datos a binario 
+    arreglo_binario_1 = string(dec2bin(vector_de_datos{1}(ith_entry)));
+    arreglo_binario_2 = string(dec2bin(vector_de_datos{2}(ith_entry)));
+    % Envío de datos de regreso
+    writeline(s, arreglo_binario_1);
+    writeline(s, arreglo_binario_2);
 
-% Transformación de datos a binario 
-arreglo_binario_1 = string(dec2bin(vector_de_datos{1}(1:end)));
-arreglo_binario_2 = string(dec2bin(vector_de_datos{2}(1:end)));
-
-% Envío de datos de regreso
-for jj = 1: length(arreglo_binario_1)
-    writeline(s, arreglo_binario_1(jj));
-    writeline(s, arreglo_binario_2(jj));
+    if ith_entry == 1024
+        ith_entry = 0;
+    end
 end
